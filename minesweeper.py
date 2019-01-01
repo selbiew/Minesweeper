@@ -7,10 +7,11 @@ class Board:
         self.mine_count = mine_count
         self.flag_count = flag_count
         self.board = [[Tile() for x in range(self.width)] for y in range(self.height)]
+        self.game_over = False
 
         for i, row in enumerate(self.board):
             for j, tile in enumerate(row):
-                tile.adjacent_tiles = [self.board[x][y] 
+                tile.adjacent_tiles = [self.board[y][x] 
                                        for x in range(j - 1, j + 2) for y in range(i - 1, i + 2) 
                                        if 0 <= x < self.width and 0 <= y < self.height 
                                        and (x, y) != (j, i)]
@@ -21,6 +22,24 @@ class Board:
             if (mine_x, mine_y) not in mine_locations:
                 mine_locations.append((mine_x, mine_y))
                 self.board[mine_x][mine_y].has_mine = True
+
+    def process_move(self, move):
+        row, col, action = move.split()
+        tile = self.board[int(row)][int(col)]
+
+        if action == 'reveal':
+            tile.is_revealed = True
+            if tile.has_mine:
+                self.game_over = True
+        elif action == 'flag':
+            tile.has_flag = True
+            self.flag_count -= 1
+            if self.flag_count == 0:
+                self.game_over = True
+
+    def is_won(self):
+        return sum(1 if self.board[row][col].has_mine and not self.board[row][col].has_flag else 0 
+                   for row in range(self.height) for col in range(self.width)) == 0
 
     def show_board(self):
         for row in self.board:
@@ -49,16 +68,27 @@ class Tile:
 
     def __str__(self):
         state = 'X'
-        if self.is_revealed:
-            state = 'O'
+        if self.is_revealed or (self.adjacent_revealed() and not self.has_mine):
+            state = str(self.adjacent_mines())
         if self.has_flag:
             state = 'F'
         
         return state  
 
 def main():
-    board = Board()
-    print(board)
+    print("Enter move of the form: row col action")
+    print("eg: '0 0 reveal' or '3 2 flag'")
+
+    board = Board(width=4, height=4, mine_count=3, flag_count=3)
+    while not board.game_over:
+        print(board)
+        move = input("Move: ")
+        board.process_move(move)
+    if board.is_won():
+        print("Congratulations!")
+    else:
+        print("Oof, better luck next time!")
+
     board.show_board()
 
 if __name__ == "__main__":
