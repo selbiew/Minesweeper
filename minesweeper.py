@@ -8,6 +8,29 @@ class Board:
         self.flag_count = flag_count
         self.board = [[Tile() for x in range(self.width)] for y in range(self.height)]
 
+        for i, row in enumerate(self.board):
+            for j, tile in enumerate(row):
+                tile.adjacent_tiles = [self.board[x][y] 
+                                       for x in range(j - 1, j + 2) for y in range(i - 1, i + 2) 
+                                       if 0 <= x < self.width and 0 <= y < self.height 
+                                       and (x, y) != (j, i)]
+
+        mine_locations = []
+        while len(mine_locations) < mine_count:
+            mine_x, mine_y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
+            if (mine_x, mine_y) not in mine_locations:
+                mine_locations.append((mine_x, mine_y))
+                self.board[mine_x][mine_y].has_mine = True
+
+    def show_board(self):
+        for row in self.board:
+            print('')
+            for tile in row:
+                if tile.has_mine:
+                    print('M', end='')
+                else:
+                    print('X', end='')
+
     def __str__(self):
         return '\n'.join([''.join([str(tile) for tile in row]) for row in self.board])
 
@@ -36,6 +59,7 @@ class Tile:
 def main():
     board = Board()
     print(board)
+    board.show_board()
 
 if __name__ == "__main__":
     main()
