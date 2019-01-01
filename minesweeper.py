@@ -11,10 +11,10 @@ class Board:
 
         for i, row in enumerate(self.board):
             for j, tile in enumerate(row):
-                tile.adjacent_tiles = [self.board[y][x] 
-                                       for x in range(j - 1, j + 2) for y in range(i - 1, i + 2) 
-                                       if 0 <= x < self.width and 0 <= y < self.height 
-                                       and (x, y) != (j, i)]
+                tile.adjacent_tiles = [self.board[r][c] 
+                                       for c in range(j - 1, j + 2) for r in range(i - 1, i + 2) 
+                                       if 0 <= c < self.width and 0 <= r < self.height 
+                                       and (r, c) != (i, j)]
 
         mine_locations = []
         while len(mine_locations) < mine_count:
@@ -42,13 +42,7 @@ class Board:
                    for row in range(self.height) for col in range(self.width)) == 0
 
     def show_board(self):
-        for row in self.board:
-            print('')
-            for tile in row:
-                if tile.has_mine:
-                    print('M', end='')
-                else:
-                    print('X', end='')
+        print('\n'.join([''.join(['M' if tile.has_mine else 'X' for tile in row]) for row in self.board]))
 
     def __str__(self):
         return '\n'.join([''.join([str(tile) for tile in row]) for row in self.board])
@@ -68,8 +62,10 @@ class Tile:
 
     def __str__(self):
         state = 'X'
-        if self.is_revealed or (self.adjacent_revealed() and not self.has_mine):
+        if self.is_revealed or self.adjacent_revealed():
             state = str(self.adjacent_mines())
+        if self.has_mine:
+            state = 'X'
         if self.has_flag:
             state = 'F'
         
@@ -79,7 +75,7 @@ def main():
     print("Enter move of the form: row col action")
     print("eg: '0 0 reveal' or '3 2 flag'")
 
-    board = Board(width=4, height=4, mine_count=3, flag_count=3)
+    board = Board(width=10, height=10, mine_count=9, flag_count=9)
     while not board.game_over:
         print(board)
         move = input("Move: ")
@@ -87,9 +83,8 @@ def main():
     if board.is_won():
         print("Congratulations!")
     else:
+        board.show_board()
         print("Oof, better luck next time!")
-
-    board.show_board()
 
 if __name__ == "__main__":
     main()
